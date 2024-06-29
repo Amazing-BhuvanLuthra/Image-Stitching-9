@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Stitching and Cropping</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+        }
+        img {
+            margin: 20px 0;
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Images for Stitching and Cropping</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="images" multiple accept="image/*">
+        <button type="submit">Upload and Process</button>
+    </form>
+    <h2>Stitched Image</h2>
+    <img id="stitchedImage" src="" alt="Stitched Image">
+    <h2>Cropped Image</h2>
+    <img id="croppedImage" src="" alt="Cropped Image">
+    
+    <script>
+        document.getElementById('uploadForm').onsubmit = async function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(this);
+            const response = await fetch('/stitch', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const blobs = await response.blob();
+                const blobArray = await blobs.arrayBuffer();
+                const stitchedBlob = new Blob([blobArray.slice(0, blobArray.byteLength / 2)], {type: 'image/jpeg'});
+                const croppedBlob = new Blob([blobArray.slice(blobArray.byteLength / 2)], {type: 'image/jpeg'});
+
+                const stitchedUrl = URL.createObjectURL(stitchedBlob);
+                document.getElementById('stitchedImage').src = stitchedUrl;
+
+                const croppedUrl = URL.createObjectURL(croppedBlob);
+                document.getElementById('croppedImage').src = croppedUrl;
+            } else {
+                alert('Error: ' + response.statusText);
+            }
+        };
+    </script>
+</body>
+</html>
